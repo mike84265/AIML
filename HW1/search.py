@@ -88,17 +88,17 @@ def depthFirstSearch(problem):
     print "Start's successors:", problem.getSuccessors(problem.getStartState())
     """
     "*** YOUR CODE HERE ***"
-    return uninformedSearch(problem, util.Stack())
+    return informedSearch(problem, util.Stack())
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    return uninformedSearch(problem, util.Queue())
+    return informedSearch(problem, util.Queue())
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    return uninformedSearch(problem, util.PriorityQueueWithFunction(lambda x: float(x[0][2]).__lt__))
+    return informedSearch(problem, util.PriorityQueueWithFunction(lambda x: x[0][2]))
 def nullHeuristic(state, problem=None):
     """
     A heuristic function estimates the cost from the current state to the nearest
@@ -109,7 +109,7 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    return informedSearch(problem, util.PriorityQueueWithFunction(lambda x: x[0][2] + heuristic(x[0][0], problem)))
 
 
 # Abbreviations
@@ -119,14 +119,14 @@ astar = aStarSearch
 ucs = uniformCostSearch
 
 # Helper funcitons
-def uninformedSearch(problem, dataStructure):
+def informedSearch(problem, dataStructure):
     exploredSet = list()
     frontier = dataStructure
     exploredSet.append(problem.getStartState())
 
     for sol in problem.getSuccessors(problem.getStartState()):
         exploredSet.append(sol[0])
-        frontier.push(( sol, [sol[1]] ))
+        frontier.push([ list(sol), [sol[1]] ])
 
     while not frontier.isEmpty():
         expandedNode = frontier.pop()
