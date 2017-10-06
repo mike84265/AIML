@@ -315,7 +315,6 @@ class CornersProblem(search.SearchProblem):
             is the incremental cost of expanding to that successor
         """
         "*** YOUR CODE HERE ***"
-        from copy import deepcopy
         successors = []
         for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
             # Add a successor state to the successor list if the action is legal
@@ -324,7 +323,7 @@ class CornersProblem(search.SearchProblem):
             dx, dy = Actions.directionToVector(action)
             nextx, nexty = int(x + dx), int(y + dy)
             if not self.walls[nextx][nexty]:
-                nextfood = deepcopy(state[1])
+                nextFood = state[1].copy()
                 stepCost = 1
                 if (nextx, nexty) in nextfood:
                     nextfood.remove((nextx, nexty))
@@ -346,6 +345,8 @@ class CornersProblem(search.SearchProblem):
             x, y = int(x + dx), int(y + dy)
             if self.walls[x][y]: return 999999
         return len(actions)
+    def getWalls(self):
+        return self.walls
 
 
 def cornersHeuristic(state, problem):
@@ -365,7 +366,12 @@ def cornersHeuristic(state, problem):
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    return 0 # Default to trivial solution
+    dist = []
+    if len(state[1]) == 0:
+        return 0
+    for point in state[1]:
+        dist.append(util.manhattanDistance(state[0], point))
+    return min(dist)
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -459,7 +465,13 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    return 0
+    foodCoordinate = foodGrid.asList()
+    if len(foodCoordinate) == 0:
+        return 0
+    dist = []
+    for point in foodCoordinate:
+        dist.append(util.manhattanDistance(position, point))
+    return min(dist)
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
