@@ -125,13 +125,15 @@ def informedSearch(problem, dataStructure):
     exploredSet.append(problem.getStartState())
 
     for sol in problem.getSuccessors(problem.getStartState()):
-        exploredSet.append(sol[0])
         frontier.push([ list(sol), [sol[1]] ])
 
     while not frontier.isEmpty():
         expandedNode = frontier.pop()
-        # [ [((x,y), dir, cost], [dirList] ]
-        exploredSet.append(expandedNode[0][0])
+        # [ [state, transition, cost], [actions] ]
+        if expandedNode[0][0] not in exploredSet:
+            exploredSet.append(expandedNode[0][0])
+        else:
+            continue
         if problem.isGoalState(expandedNode[0][0]):
             return expandedNode[1]
         for child in problem.getSuccessors(expandedNode[0][0]):
