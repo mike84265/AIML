@@ -315,6 +315,7 @@ class CornersProblem(search.SearchProblem):
             is the incremental cost of expanding to that successor
         """
         "*** YOUR CODE HERE ***"
+        from copy import deepcopy
         successors = []
         for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
             # Add a successor state to the successor list if the action is legal
@@ -323,7 +324,7 @@ class CornersProblem(search.SearchProblem):
             dx, dy = Actions.directionToVector(action)
             nextx, nexty = int(x + dx), int(y + dy)
             if not self.walls[nextx][nexty]:
-                nextFood = state[1].copy()
+                nextfood = deepcopy(state[1])
                 stepCost = 1
                 if (nextx, nexty) in nextfood:
                     nextfood.remove((nextx, nexty))
@@ -428,6 +429,10 @@ class FoodSearchProblem:
                 return 999999
             cost += 1
         return cost
+    def getWalls(self):
+        return self.walls
+    def getState(self):
+        return self.startingGameState
 
 class AStarFoodSearchAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -465,13 +470,28 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
+    if 'distance' not in problem.heuristicInfo:
+        problem.heuristicInfo['distance'] = dict()
     foodCoordinate = foodGrid.asList()
-    if len(foodCoordinate) == 0:
+    if len(foodCoordinate) <= 1:
         return 0
     dist = []
     for point in foodCoordinate:
-        dist.append(util.manhattanDistance(position, point))
-    return min(dist)
+        if point < position:
+            pair = (point, position)
+        else:
+            pair = (position, point)
+        if pair in problem.heuristicInfo['distance']:
+            dist.append( (point, problem.heuristicInfo['distance'][pair]))
+        else:
+            pairDistance = mazeDistance(position, point, problem.getState())
+            problem.heuristicInfo['distance'][pair] = pairDistance
+            dist.append( (point, pairDistance) )
+    d1 = min(dist, key=lambda x: x[1])
+    dist.remove(d1)
+    d2 = min(dist, key=lambda x: x[1])
+    d12 = mazeDistance(d1[0], d2[0], problem.getState())
+    return d2[1] + d12
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
