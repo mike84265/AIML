@@ -74,7 +74,44 @@ class ReflexAgent(Agent):
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
         "*** YOUR CODE HERE ***"
-        return successorGameState.getScore()
+        from searchAgents import mazeDistance
+        from util import manhattanDistance
+        x, y = newPos
+        foodEnumeration = 0
+        ghostEnumeration = 0
+        newFoodList = newFood.asList()
+        nearFood = [food for food in newFoodList if food[0] in range(x-2,x+3) and food[1] in range(y-2,y+3)]
+        if len(nearFood) > 0:
+            # print '** Fast searching'
+            for food in nearFood:
+                foodEnumeration += 250 / mazeDistance(newPos, food, successorGameState)
+        if currentGameState.hasFood(*newPos):
+            foodEnumeration += 1000
+
+        
+        for ghost in newGhostStates:
+            if ghost.scaredTimer == 0:
+                ghostPos = ghost.getPosition()
+                ghostPosInt = int(ghostPos[0]), int(ghostPos[1])
+                ghostEnumeration += 5000 / (mazeDistance(newPos, ghostPosInt, successorGameState) ** 2) if not ghostPosInt == newPos else 999999
+        if foodEnumeration == 0 and not action == Directions.STOP:
+            newFoodList.sort(key=lambda x: manhattanDistance(newPos, x))
+            # print '** Special searching'
+            if manhattanDistance(newPos, newFoodList[0]) <= 6:
+                foodEnumeration += 250 / mazeDistance(newPos, newFoodList[0], successorGameState)
+            # For far searching
+            else:
+                # print '** Far searching'
+                if abs(food[0]-newPos[0]) > abs(food[1]-newPos[1]):
+                    if food[0] > newPos[0] and action == Directions.EAST: foodEnumeration += 500
+                    elif food[0] < newPos[0] and action == Directions.WEST: foodEnumeration += 500
+                else:
+                    if food[1] > newPos[1] and action == Directions.NORTH: foodEnumeration += 500
+                    elif food[1] < newPos[1] and action == Directions.SOUTH: foodEnumeration += 500
+                
+        ret = foodEnumeration - ghostEnumeration if ghostEnumeration > 300 else foodEnumeration
+        # print 'Action = ', action, 'ret = ', ret, 'foodEnumeration = ', foodEnumeration, 'ghostEnumeration = ', ghostEnumeration
+        return ret
 
 def scoreEvaluationFunction(currentGameState):
     """
