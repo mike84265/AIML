@@ -82,7 +82,6 @@ class ReflexAgent(Agent):
         newFoodList = newFood.asList()
         nearFood = [food for food in newFoodList if food[0] in range(x-2,x+3) and food[1] in range(y-2,y+3)]
         if len(nearFood) > 0:
-            # print '** Fast searching'
             for food in nearFood:
                 foodEnumeration += 250 / mazeDistance(newPos, food, successorGameState)
         if currentGameState.hasFood(*newPos):
@@ -96,12 +95,9 @@ class ReflexAgent(Agent):
                 ghostEnumeration += 5000 / (mazeDistance(newPos, ghostPosInt, successorGameState) ** 2) if not ghostPosInt == newPos else 999999
         if foodEnumeration == 0 and not action == Directions.STOP:
             newFoodList.sort(key=lambda x: manhattanDistance(newPos, x))
-            # print '** Special searching'
             if manhattanDistance(newPos, newFoodList[0]) <= 6:
                 foodEnumeration += 250 / mazeDistance(newPos, newFoodList[0], successorGameState)
-            # For far searching
             else:
-                # print '** Far searching'
                 if abs(food[0]-newPos[0]) > abs(food[1]-newPos[1]):
                     if food[0] > newPos[0] and action == Directions.EAST: foodEnumeration += 500
                     elif food[0] < newPos[0] and action == Directions.WEST: foodEnumeration += 500
@@ -166,7 +162,38 @@ class MinimaxAgent(MultiAgentSearchAgent):
             Returns the total number of agents in the game
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
+        from copy import deepcopy
+        removeStop = False
+        states = []
+        legalMoves = gameState.getLegalActions()
+        if removeStop: legalMoves.remove(Directions.STOP)
+        states = [ (action, gameState.generatePacmanSuccessor(action)) for action in legalMoves]
+        for d in range(1, self.depth):
+            currentStates = deepcopy(states)
+            del states[:]
+            for s in currentStates:
+                legalMoves = s[1].getLegalActions()
+                if len(legalMoves) > 0 and removeStop: legalMoves.remove(Directions.STOP)
+                for action in legalMoves:
+                    states.append((s[0], s[1].generatePacmanSuccessor(action)))
+        if len(states) > 0:
+            scores = [self.evaluationFunction(s[1]) for s in states]
+            bestScore = max(scores)
+            print bestScore
+            bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
+            chosenIndex = random.choice(bestIndices) # Pick randomly among the best
+            return states[chosenIndex][0]
+        else:
+            return Directions.STOP
+
+
+        # Choose one of the best actions
+        # scores = [self.evaluationFunction(gameState, action) for action in legalMoves]
+        # bestScore = max(scores)
+        # bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
+        # chosenIndex = random.choice(bestIndices) # Pick randomly among the best
+        # return legalMoves[chosenIndex]
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
