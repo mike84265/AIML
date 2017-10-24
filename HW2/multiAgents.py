@@ -188,38 +188,6 @@ class MinimaxAgent(MultiAgentSearchAgent):
         chosenIndex = random.choice(bestIndices) # Pick randomly among the best
         return PacmanLegalMoves[chosenIndex] 
 
-        from copy import deepcopy
-        removeStop = False
-        states = []
-        legalMoves = gameState.getLegalActions()
-        if removeStop: legalMoves.remove(Directions.STOP)
-        states = [ (action, gameState.generatePacmanSuccessor(action)) for action in legalMoves]
-        for d in range(1, self.depth):
-            currentStates = deepcopy(states)
-            del states[:]
-            for s in currentStates:
-                legalMoves = s[1].getLegalActions()
-                if len(legalMoves) > 0 and removeStop: legalMoves.remove(Directions.STOP)
-                for action in legalMoves:
-                    states.append((s[0], s[1].generatePacmanSuccessor(action)))
-        if len(states) > 0:
-            scores = [self.evaluationFunction(s[1]) for s in states]
-            bestScore = max(scores)
-            print bestScore
-            bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
-            chosenIndex = random.choice(bestIndices) # Pick randomly among the best
-            return states[chosenIndex][0]
-        else:
-            return Directions.STOP
-
-
-        # Choose one of the best actions
-        # scores = [self.evaluationFunction(gameState, action) for action in legalMoves]
-        # bestScore = max(scores)
-        # bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
-        # chosenIndex = random.choice(bestIndices) # Pick randomly among the best
-        # return legalMoves[chosenIndex]
-
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
       Your minimax agent with alpha-beta pruning (question 3)
@@ -230,7 +198,35 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
           Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        def alphabeta(state, depth, agentIndex, alpha, beta):
+            legalMoves = state.getLegalActions(agentIndex)
+            if depth == 0 or state.isWin() or state.isLose() :
+                return self.evaluationFunction(state)
+            if Directions.STOP in legalMoves: legalMoves.remove(Directions.STOP)
+            if agentIndex == 0:
+                ret = -999999
+                for action in legalMoves:
+                    tmp = alphabeta(state.generateSuccessor(agentIndex, action), depth-1, 1, alpha, beta)
+                    ret = tmp if tmp > ret else ret
+                    if ret >= beta: return ret
+                    alpha = ret if ret > alpha else alpha
+            else:
+                ret = 999999
+                nextAgent = agentIndex+1 if agentIndex < state.getNumAgents()-1 else 0
+                for action in legalMoves:
+                    tmp = alphabeta(state.generateSuccessor(agentIndex, action), depth-1, nextAgent, alpha, beta)
+                    ret = tmp if tmp < ret else ret
+                    if alpha >= ret: return ret
+                    beta = ret if ret < beta else beta
+            return ret
+        PacmanLegalMoves = gameState.getLegalActions()
+        if Directions.STOP in PacmanLegalMoves: PacmanLegalMoves.remove(Directions.STOP)
+        scores = [alphabeta(gameState.generatePacmanSuccessor(action), gameState.getNumAgents()*self.depth-1, 1, -999999, 999999) for action in PacmanLegalMoves] 
+        bestScore = max(scores)
+        print bestScore
+        bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
+        chosenIndex = random.choice(bestIndices) # Pick randomly among the best
+        return PacmanLegalMoves[chosenIndex] 
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
