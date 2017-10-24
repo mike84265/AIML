@@ -162,6 +162,33 @@ class MinimaxAgent(MultiAgentSearchAgent):
             Returns the total number of agents in the game
         """
         "*** YOUR CODE HERE ***"
+        def minimax(state, depth, agentIndex):
+            legalMoves = state.getLegalActions(agentIndex)
+            if depth == 0 or state.isWin() or state.isLose() :
+                return self.evaluationFunction(state)
+            if Directions.STOP in legalMoves: legalMoves.remove(Directions.STOP)
+            if agentIndex == 0:
+                ret = -999999
+                for action in legalMoves:
+                    tmp = minimax(state.generateSuccessor(agentIndex, action), depth-1, 1)
+                    ret = tmp if tmp > ret else ret
+            else:
+                ret = 999999
+                for action in legalMoves:
+                    nextAgent = agentIndex+1 if agentIndex < state.getNumAgents()-1 else 0
+                    tmp = minimax(state.generateSuccessor(agentIndex, action), depth-1, nextAgent)
+                    ret = tmp if tmp < ret else ret
+            return ret
+
+        PacmanLegalMoves = gameState.getLegalActions()
+        if Directions.STOP in PacmanLegalMoves: PacmanLegalMoves.remove(Directions.STOP)
+        scores = [minimax(gameState.generatePacmanSuccessor(action), gameState.getNumAgents()*(self.depth-1), 1) for action in PacmanLegalMoves] 
+        bestScore = max(scores)
+        print bestScore
+        bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
+        chosenIndex = random.choice(bestIndices) # Pick randomly among the best
+        print PacmanLegalMoves[chosenIndex]
+        return PacmanLegalMoves[chosenIndex] 
 
         from copy import deepcopy
         removeStop = False
