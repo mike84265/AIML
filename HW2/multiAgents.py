@@ -280,7 +280,71 @@ def betterEvaluationFunction(currentGameState):
       DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    from searchAgents import mazeDistance
+    from util import manhattanDistance
+    # Food Part
+    PacmanPos = currentGameState.getPacmanPosition()
+    foodGrid = currentGameState.getFood()
+    # foodList = foodGrid.asList()
+    # foodDist = [mazeDistance(PacmanPos, food, currentGameState) for food in foodList]
+    # foodDist.sort()
+    foodEnumeration = 0
+    # for food in foodDist:
+    #     foodEnumeration += 100.0 / food ** 3
+    # for food in foodDist[0:3]:
+    #     if food <= 2:
+    #         foodEnumeration += (9-food)
+
+    gridWidth = currentGameState.getFood().width
+    gridHeight = currentGameState.getFood().height
+    x,y = PacmanPos
+    minx = x-3 if x-3>=0 else 0
+    maxx = x+3 if x+3<=gridWidth-1 else gridWidth
+    miny = y-3 if y-3>=0 else 0
+    maxy = y+3 if y+3<=gridHeight-1 else gridHeight
+    nearFoodNum = 0
+    for x in range(minx, maxx):
+        for y in range(miny, maxy):
+            if foodGrid[x][y]:
+                foodEnumeration += 200.0 / ((mazeDistance(PacmanPos, (x,y), currentGameState)+1) ** 2)
+    if foodEnumeration == 0:
+        foodList = foodGrid.asList()
+        foodDist = [mazeDistance(PacmanPos, food, currentGameState) for food in foodList]
+        if len(foodDist) != 0:
+            foodEnumeration += 200.0 / ((min(foodDist)+1) ** 2)
+    foodEnumeration -= 100 * currentGameState.getNumFood()
+    # print foodEnumeration
+
+    # Ghost Part
+    GhostStates = currentGameState.getGhostStates()
+    legalMoves = currentGameState.getLegalActions(0)
+    ghostEnumeration = 0
+    ghostDist = []
+    for ghost in GhostStates:
+        ghostPos = ghost.getPosition()
+        ghostPos = int(ghostPos[0]), int(ghostPos[1])
+        dist2ghost = mazeDistance(PacmanPos, ghostPos, currentGameState) if ghostPos != PacmanPos else 0
+        ghostDist.append(dist2ghost)
+        if ghost.scaredTimer == 0:
+            est = 500 / (dist2ghost ** 2) if ghostPos != PacmanPos else 999999
+            if est >= 100: ghostEnumeration += est
+            if dist2ghost <= 3 and len(legalMoves) <= 2: ghostEnumeration += 500
+        else:
+            if ghost.scaredTimer - dist2ghost >= 4:
+                ghostEnumeration -= 2000.0 / (dist2ghost+1) ** 2
+                if ghost.getPosition() == PacmanPos:
+                    ghostEnumeration -= 5000
+
+    # Capsule Part
+    capsulePos = currentGameState.getCapsules()
+    dist2capsule = [mazeDistance(PacmanPos, capsule, currentGameState) for capsule in capsulePos]
+    capsuleEnumeration = 0
+    for capsule in dist2capsule:
+        capsuleEnumeration += 500.0 / (capsule+1) ** 2 
+    
+    ret = foodEnumeration - ghostEnumeration
+    return ret
+
 
 # Abbreviation
 better = betterEvaluationFunction
