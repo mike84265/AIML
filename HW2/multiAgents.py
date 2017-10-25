@@ -182,7 +182,8 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
         PacmanLegalMoves = gameState.getLegalActions()
         if Directions.STOP in PacmanLegalMoves: PacmanLegalMoves.remove(Directions.STOP)
-        scores = [minimax(gameState.generatePacmanSuccessor(action), gameState.getNumAgents()*self.depth-1, 1) for action in PacmanLegalMoves] 
+        searchDepth = gameState.getNumAgents() * self.depth - 1
+        scores = [minimax(gameState.generatePacmanSuccessor(action), searchDepth, 1) for action in PacmanLegalMoves] 
         bestScore = max(scores)
         bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
         chosenIndex = random.choice(bestIndices) # Pick randomly among the best
@@ -219,9 +220,11 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
                     if alpha >= ret: return ret
                     beta = ret if ret < beta else beta
             return ret
+
         PacmanLegalMoves = gameState.getLegalActions()
         if Directions.STOP in PacmanLegalMoves: PacmanLegalMoves.remove(Directions.STOP)
-        scores = [alphabeta(gameState.generatePacmanSuccessor(action), gameState.getNumAgents()*self.depth-1, 1, -999999, 999999) for action in PacmanLegalMoves] 
+        searchDepth = gameState.getNumAgents() * self.depth - 1
+        scores = [alphabeta(gameState.generatePacmanSuccessor(action), searchDepth, 1, -999999, 999999) for action in PacmanLegalMoves] 
         bestScore = max(scores)
         print bestScore
         bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
@@ -241,7 +244,33 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
           legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        def expectimax(state, depth, agentIndex):
+            if depth == 0 or state.isWin() or state.isLose() :
+                return self.evaluationFunction(state)
+            numAgent = state.getNumAgents()
+            if agentIndex == 0:
+                ret = -999999
+                legalMoves = state.getLegalActions(agentIndex)
+                legalMoves.remove(Directions.STOP)
+                for action in legalMoves:
+                    tmp = expectimax(state.generateSuccessor(agentIndex, action), depth-1, 1)
+                    ret = tmp if tmp > ret else ret
+            else:
+                ret = 0
+                legalMoves = state.getLegalActions(agentIndex)
+                nextAgent = agentIndex+1 if agentIndex < numAgent-1 else 0
+                for action in legalMoves:
+                    ret += 1.0/len(legalMoves) * expectimax(state.generateSuccessor(agentIndex, action), depth-1, nextAgent)
+            return ret
+
+        PacmanLegalMoves = gameState.getLegalActions()
+        PacmanLegalMoves.remove(Directions.STOP)
+        searchDepth = gameState.getNumAgents() * self.depth - 1
+        scores = [expectimax(gameState.generatePacmanSuccessor(action), searchDepth, 1) for action in PacmanLegalMoves] 
+        bestScore = max(scores)
+        bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
+        chosenIndex = random.choice(bestIndices) # Pick randomly among the best
+        return PacmanLegalMoves[chosenIndex] 
 
 def betterEvaluationFunction(currentGameState):
     """
