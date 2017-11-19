@@ -317,7 +317,6 @@ class ParticleFilter(InferenceModule):
         weight.divideAll(1.0/self.numParticles)
         self.particles = []
         for p in self.legalPositions:
-            # print 'weight[p]=', weight[p], 'round=>', round(weight[p])
             self.particles.extend([p] * int(round(weight[p])))
 
     def elapseTime(self, gameState):
@@ -430,6 +429,13 @@ class JointParticleFilter:
         weight with each position) is incorrect and may produce errors.
         """
         "*** YOUR CODE HERE ***"
+        from itertools import product
+        from random import shuffle
+        combination = list(product(self.legalPositions, repeat=self.numGhosts))
+        self.particles = []
+        numSymbol = self.numParticles / len(combination)
+        self.particles = combination * numSymbol
+        shuffle(self.particles)
 
     def addGhostAgent(self, agent):
         """
@@ -477,6 +483,38 @@ class JointParticleFilter:
         emissionModels = [busters.getObservationDistribution(dist) for dist in noisyDistances]
 
         "*** YOUR CODE HERE ***"
+        weight = util.Counter()
+        """
+        for i in range(self.numGhosts):
+            if emissionModels[i].totalCount() == 0: 
+                self.initializeUniformly()
+                return
+            for p in self.particles:
+                if noisyDistances[i] == None:
+                    p = self.getParticleWithGhostInJail(p, i)
+                else:
+                    distance = util.manhattanDistance(pacmanPosition, p[i])
+                    weight[p] += emissionModels[i][distance]
+        """
+        for p in self.particles:
+            prob = 1.0
+            for i in range(self.numGhosts):
+                if noisyDistances[i] == None:
+                    p.self.getParticleWithGhostInJail(p,i)
+                    # weight[p] += 1.0
+                else:
+                    distance = util.manhattanDistance(pacmanPosition, p[i])
+                    # weight[p] += emissionModels[i][distance]
+                    prob *= emissionModels[i][distance]
+            weight[p] += prob
+        if weight.totalCount() == 0:
+            self.initializeParticles()
+            return
+        weight.normalize()
+        weight.divideAll(1.0/self.numParticles)
+        self.particles = []
+        for p in weight.sortedKeys():
+            self.particles.extend([p] * int(round(weight[p])))
 
     def getParticleWithGhostInJail(self, particle, ghostIndex):
         """
@@ -537,14 +575,21 @@ class JointParticleFilter:
             # now loop through and update each entry in newParticle...
 
             "*** YOUR CODE HERE ***"
-
+            for index in range(self.numGhosts):
+                newDist = getPositionDistributionForGhost(setGhostPositions(gameState, oldParticle[index]), i, self.ghostIndex[i])
+                newParticle[index] = util.sampleFromCounter(newDist)
             "*** END YOUR CODE HERE ***"
+            print newParticle
             newParticles.append(tuple(newParticle))
         self.particles = newParticles
 
     def getBeliefDistribution(self):
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        belief = util.Counter()
+        for p in self.particles:
+            belief[p] += 1.0
+        belief.normalize()
+        return belief
 
 # One JointInference module is shared globally across instances of MarginalInference
 jointInference = JointParticleFilter()
