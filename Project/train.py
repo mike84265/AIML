@@ -19,21 +19,27 @@ def standardize(x):
 x_train.pop('Train_ID')
 x_train.astype(float)
 NO_STD = ['SEX', 'EDUCATION', 'MARRIAGE']
+SQUARE = ['PAY_1', 'PAY_2', 'PAY_3', 'PAY_4', 'PAY_5', 'PAY_6', 'BILL_AMT1', 'BILL_AMT2', 'BILL_AMT3', 'BILL_AMT4', 'BILL_AMT5', 
+    'BILL_AMT6', 'PAY_AMT1', 'PAY_AMT2', 'PAY_AMT3', 'PAY_AMT4', 'PAY_AMT5', 'PAY_AMT6']
 indices = x_train.axes[1]
 
 for index in indices:
     if index not in NO_STD:
         x_train[index] = standardize(x_train[index])
+for index in SQUARE:
+    x_train[index + '_2'] = standardize(x_train[index] ** 2)
 
+'''
 x_train['AGE_2'] = standardize(x_train['AGE'] ** 2)
 x_train['PAY_5_2'] = standardize(x_train['PAY_5'] ** 2)
 x_train['PAY_6_2'] = standardize(x_train['PAY_6'] ** 2)
+x_train['BILL_AMT4_2'] = standardize(x_train['BILL_AMT4'] ** 2)
 x_train['BILL_AMT5_2'] = standardize(x_train['BILL_AMT5'] ** 2)
 x_train['BILL_AMT6_2'] = standardize(x_train['BILL_AMT6'] ** 2)
+x_train['PAY_AMT4_2'] = standardize(x_train['PAY_AMT4'] ** 2)
 x_train['PAY_AMT5_2'] = standardize(x_train['PAY_AMT5'] ** 2)
 x_train['PAY_AMT6_2'] = standardize(x_train['PAY_AMT6'] ** 2)
 
-'''
 for index in indices:
     x_train[index + '_2'] = standardize(x_train[index] ** 2)
 
@@ -47,13 +53,13 @@ y_train = np.array(y_train.astype(int))
 model = Sequential()
 model.add(Dense(128, input_shape = (np.size(x_train,1),), activation='relu', kernel_initializer='truncated_normal'))
 model.add(BatchNormalization())
-model.add(Dropout(0.2))
+model.add(Dropout(0.4))
 model.add(Dense(64, activation='relu', kernel_initializer='truncated_normal'))
 model.add(BatchNormalization())
-model.add(Dropout(0.2))
+model.add(Dropout(0.4))
 model.add(Dense(32, activation='relu', kernel_initializer='truncated_normal'))
 model.add(BatchNormalization())
-model.add(Dropout(0.2))
+model.add(Dropout(0.4))
 # model.add(Dense(16, activation='relu', kernel_initializer='truncated_normal'))
 # model.add(BatchNormalization())
 model.add(Dense(1, activation='sigmoid', kernel_initializer='truncated_normal'))
