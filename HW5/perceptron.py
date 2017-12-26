@@ -60,7 +60,14 @@ class PerceptronClassifier:
             print "Starting iteration ", iteration, "..."
             for i in range(len(trainingData)):
                 "*** YOUR CODE HERE ***"
-                util.raiseNotDefined()
+                ymax, maxScore = None, 0
+                for label in self.legalLabels:
+                    score = trainingData[i] * self.weights[label]
+                    if score >= maxScore:
+                        ymax, maxScore = label, score
+                if ymax != trainingLabels[i]:
+                    self.weights[trainingLabels[i]] += trainingData[i]
+                    self.weights[ymax] -= trainingData[i]
 
     def classify(self, data ):
         """
@@ -88,6 +95,10 @@ class PerceptronClassifier:
         featuresWeights = []
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        sortedWeight = sorted(self.weights[label].items(), key=lambda x: x[1], reverse=True)
+        # print 'sortedWeight = ', sortedWeight
+        # print 'weights = ', self.weights
+        for feature in sortedWeight[:100]:
+            featuresWeights.append(feature[0])
 
         return featuresWeights
