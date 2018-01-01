@@ -68,7 +68,37 @@ class MiraClassifier:
         ## Cgrid: a list of constant C
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        self.C = Cgrid[0]
+        maxPrecision = 0
+        for C in sorted(Cgrid):
+            currentPrecision = 0
+            self.initializeWeightsToZero()
+            for iteration in range(self.max_iterations):
+                print "Starting iteration ", iteration, "on C =", C, "..."
+                for i in range(len(trainingData)):
+                    ymax, maxScore = None, 0
+                    for label in self.legalLabels:
+                        score = trainingData[i] * self.weights[label]
+                        if score >= maxScore:
+                            ymax, maxScore = label, score
+                    if ymax == trainingLabels[i]:
+                        continue
+                    Tmin = ((self.weights[ymax] - self.weights[trainingLabels[i]]) * trainingData[i] + 1.0) / \
+                        (2.0 * (trainingData[i] * trainingData[i]) )
+                    T = min(Tmin, C)
+                    modification = trainingData[i].copy()
+                    modification.divideAll(1.0/T)
+                    self.weights[trainingLabels[i]] += modification 
+                    self.weights[ymax] -= modification 
+            guesses = self.classify(validationData)
+            for i in range(len(validationData)):
+                if guesses[i] == validationLabels[i]:
+                    currentPrecision += 1
+            if currentPrecision > maxPrecision:
+                maxPrecision = currentPrecision
+                bestWeight = self.weights.copy()
+                self.C = C
+        self.weights = bestWeight
 
     def classify(self, data ):
         """
